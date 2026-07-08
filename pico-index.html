@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototipo — Elementos de Decisión Clínica · PICO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --surface-alt: #F3F2ED;
+    --fg: #1A1F2E;
+    --muted: #6B7280;
+    --border: #E3E2DC;
+    --border-strong: #C8C6BE;
+
+    --accent: #0F5D5E;
+    --accent-soft: #E6EEED;
+    --accent-strong: #0A4849;
+
+    --correct: #2F6D4F;
+    --correct-soft: #E4F0E9;
+    --incorrect: #9B3A1E;
+    --incorrect-soft: #F5E4DC;
+    --warn: #A6801E;
+    --warn-soft: #F4EDD5;
+
+    --p-color: #3B5680;
+    --i-color: #0F5D5E;
+    --c-color: #A67C3F;
+    --o-color: #7A3B4A;
+
+    --radius: 4px;
+    --radius-lg: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .display { font-family: 'Fraunces', Georgia, serif; font-weight: 500; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+
+  /* ---------- Layout ---------- */
+
+  header.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .brand-mark {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  .brand-sub {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .progress-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .progress-strip .mono { color: var(--fg); }
+
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* ---------- Notes panel ---------- */
+
+  .notes-panel {
+    background: var(--warn-soft);
+    border: 1px solid #E4D9AE;
+    border-radius: var(--radius-lg);
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+
+  .notes-header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .notes-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .notes-tag {
+    background: #A6801E;
+    color: white;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .notes-toggle {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .notes-body {
+    padding: 0 20px 20px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #4A4530;
+  }
+
+  .notes-body p { margin-bottom: 12px; }
+  .notes-body ul { margin: 8px 0 12px 20px; }
+  .notes-body li { margin-bottom: 6px; }
+  .notes-body strong { color: #2E2A1A; }
+
+  /* ---------- Home ---------- */
+
+  .hero {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .hero-eyebrow {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .hero-title {
+    font-family: 'Fraunces', serif;
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    max-width: 720px;
+    margin-bottom: 16px;
+  }
+
+  .hero-title em { font-style: italic; color: var(--accent); font-weight: 400; }
+
+  .hero-lede {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 640px;
+    line-height: 1.55;
+  }
+
+  .demo-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 8px;
+  }
+
+  .demo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+  }
+
+  .demo-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .demo-card-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .demo-card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .demo-card-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+
+  .demo-card-meta {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .demo-card-cta {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* ---------- Case screens ---------- */
+
+  .case-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .case-header-left h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  .case-header-eyebrow {
+    font-size: 12px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .progress-inline {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .progress-inline .mono {
+    background: var(--surface-alt);
+    padding: 3px 8px;
+    border-radius: var(--radius);
+    color: var(--fg);
+  }
+
+  .case-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+
+  .case-box-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .case-box-text {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  /* ---------- Level 1 options ---------- */
+
+  .prompt-line {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: var(--fg);
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .option {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+
+  .option:hover:not(.locked) {
+    border-color: var(--accent);
+    background: #FCFCFA;
+  }
+
+  .option.locked { cursor: default; }
+
+  .option.selected-correct {
+    border-color: var(--correct);
+    background: var(--correct-soft);
+  }
+
+  .option.selected-incorrect {
+    border-color: var(--incorrect);
+    background: var(--incorrect-soft);
+  }
+
+  .option.dimmed {
+    opacity: 0.55;
+  }
+
+  .option-marker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+    background: var(--surface);
+    color: var(--fg);
+  }
+
+  .selected-correct .option-marker {
+    background: var(--correct);
+    border-color: var(--correct);
+    color: white;
+  }
+
+  .selected-incorrect .option-marker {
+    background: var(--incorrect);
+    border-color: var(--incorrect);
+    color: white;
+  }
+
+  .option-content { flex: 1; }
+
+  .option-text {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* ---------- Feedback block ---------- */
+
+  .feedback {
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border-strong);
+    display: none;
+  }
+
+  .option.selected-correct .feedback,
+  .option.selected-incorrect .feedback,
+  .option.locked .feedback {
+    display: block;
+  }
+
+  .feedback-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .selected-correct .feedback-label { color: var(--correct); }
+  .selected-incorrect .feedback-label { color: var(--incorrect); }
+  .locked:not(.selected-correct):not(.selected-incorrect) .feedback-label { color: var(--muted); }
+
+  .feedback-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+  }
+
+  .error-tag {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-right: 6px;
+    font-weight: 600;
+  }
+
+  /* ---------- Actions ---------- */
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn {
+    padding: 11px 22px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-primary:disabled { background: var(--border-strong); cursor: not-allowed; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border-strong);
+  }
+
+  .btn-secondary:hover { color: var(--fg); border-color: var(--fg); }
+
+  .btn-link {
+    background: none;
+    color: var(--accent);
+    padding: 6px 0;
+    font-size: 13px;
+  }
+
+  /* ---------- Level 3 grid ---------- */
+
+  .pico-instruction {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #274E4E;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .pico-table {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .pico-row {
+    display: contents;
+  }
+
+  .pico-label {
+    padding: 20px 20px 20px 24px;
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    background: var(--surface-alt);
+  }
+
+  .pico-row:last-child .pico-label,
+  .pico-row:last-child .pico-value { border-bottom: none; }
+
+  .pico-label[data-c="P"] { color: var(--p-color); }
+  .pico-label[data-c="I"] { color: var(--i-color); }
+  .pico-label[data-c="C"] { color: var(--c-color); }
+  .pico-label[data-c="O"] { color: var(--o-color); }
+
+  .pico-value {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+    line-height: 1.55;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s;
+  }
+
+  .pico-value:hover:not(.confirmed) { background: #FCFCFA; }
+
+  .pico-value.marked-error {
+    background: var(--incorrect-soft);
+    border-left: 3px solid var(--incorrect);
+    padding-left: 21px;
+  }
+
+  .pico-value.marked-ok {
+    background: var(--correct-soft);
+    border-left: 3px solid var(--correct);
+    padding-left: 21px;
+  }
+
+  .pico-value.confirmed { cursor: default; }
+
+  .pico-value-status {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+
+  .marked-error .pico-value-status { color: var(--incorrect); }
+  .marked-ok .pico-value-status { color: var(--correct); }
+
+  .pico-value-hint {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 8px;
+  }
+
+  /* ---------- Correction editor ---------- */
+
+  .correction-editor {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin: 12px 0 24px;
+    display: none;
+  }
+
+  .correction-editor.open { display: block; }
+
+  .correction-editor h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  .correction-editor h4 span { color: var(--accent); }
+
+  .correction-choice {
+    display: block;
+    padding: 12px 14px;
+    background: var(--surface-alt);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .correction-choice:hover {
+    border-color: var(--border-strong);
+    background: white;
+  }
+
+  .correction-choice input {
+    margin-right: 10px;
+    accent-color: var(--accent);
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    justify-content: flex-end;
+  }
+
+  /* ---------- Result screen ---------- */
+
+  .result-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+
+  .result-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .result-score {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .result-score strong { color: var(--fg); font-weight: 600; }
+
+  .final-pico {
+    background: var(--correct-soft);
+    border: 1px solid #B8D6C4;
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+  }
+
+  .final-pico-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--correct);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .final-pico-row {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    padding: 8px 0;
+    border-bottom: 1px solid #C5DDCE;
+  }
+
+  .final-pico-row:last-child { border-bottom: none; }
+
+  .final-pico-key {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--accent-strong);
+  }
+
+  .prose-question {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #B8D6C4;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1D4535;
+  }
+
+  .prose-question em { color: var(--correct); font-style: normal; font-weight: 600; }
+
+  /* ---------- Feedback per component (N3 done) ---------- */
+
+  .fb-list {
+    margin: 20px 0 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .fb-row {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .fb-key {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .fb-key[data-c="P"] { color: var(--p-color); }
+  .fb-key[data-c="I"] { color: var(--i-color); }
+  .fb-key[data-c="C"] { color: var(--c-color); }
+  .fb-key[data-c="O"] { color: var(--o-color); }
+
+  .fb-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    padding-top: 2px;
+  }
+
+  .fb-text em {
+    font-style: normal;
+    background: var(--surface-alt);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--fg);
+  }
+
+  .fb-correct .fb-text::before {
+    content: '✓ ';
+    color: var(--correct);
+    font-weight: 700;
+    margin-right: 2px;
+  }
+
+  .fb-incorrect .fb-text::before {
+    content: '✗ ';
+    color: var(--incorrect);
+    font-weight: 700;
+    margin-right: 2px;
+  }
+
+  .fb-partial .fb-text::before {
+    content: '~ ';
+    color: var(--warn);
+    font-weight: 700;
+    margin-right: 2px;
+  }
+
+  .rules-box {
+    background: var(--surface-alt);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+
+  .rules-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .rule-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    padding: 6px 0;
+    align-items: baseline;
+  }
+
+  .rule-key {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .rule-key[data-c="P"] { color: var(--p-color); }
+  .rule-key[data-c="I"] { color: var(--i-color); }
+  .rule-key[data-c="C"] { color: var(--c-color); }
+  .rule-key[data-c="O"] { color: var(--o-color); }
+
+  .rule-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #4A4A4A;
+  }
+
+  /* ---------- Responsive ---------- */
+
+  @media (max-width: 720px) {
+    .hero-title { font-size: 32px; }
+    .demo-cards { grid-template-columns: 1fr; }
+    main { padding: 24px 16px 60px; }
+    header.topbar { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+    .progress-strip { font-size: 12px; }
+    .case-header { flex-direction: column; gap: 12px; }
+    .pico-table { grid-template-columns: 70px 1fr; }
+    .pico-label { padding: 14px; font-size: 18px; }
+    .pico-value { padding: 14px 16px; }
+    .pico-value.marked-error, .pico-value.marked-ok { padding-left: 13px; }
+    .pico-value-status { position: static; display: block; margin-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand" onclick="goHome()">
+    <div class="brand-mark">Elementos de Decisión Clínica</div>
+    <div class="brand-sub">Prototipo · Ruta A</div>
+  </div>
+  <div class="progress-strip" id="progressStrip"></div>
+</header>
+
+<main id="app"></main>
+
+<script>
+/* ============================================================
+   DATOS — CASOS
+   ============================================================ */
+
+const casesN1 = [
+  {
+    id: 'n1-01',
+    domain: 'Cardiología · Hipertensión arterial',
+    caso: 'Un cardiólogo atiende en consulta externa a adultos con hipertensión arterial no controlada a pesar de recibir enalapril en monoterapia. Se pregunta si añadir hidroclorotiazida o añadir amlodipino tiene mejor efecto sobre los eventos cardiovasculares mayores a largo plazo.',
+    opciones: [
+      {
+        letra: 'A',
+        texto: 'En adultos con hipertensión arterial no controlada bajo enalapril en monoterapia, ¿la adición de hidroclorotiazida comparada con la adición de amlodipino reduce los eventos cardiovasculares mayores?',
+        correcta: true,
+        feedback: 'La P describe al grupo con la característica que cambia la decisión (HTA no controlada bajo IECA en monoterapia). La I y la C son alternativas paralelas nombradas de forma limpia, sin dosis ni vía. La O es un desenlace clínicamente importante para el paciente.'
+      },
+      {
+        letra: 'B',
+        texto: 'En adultos con hipertensión arterial no controlada bajo enalapril en monoterapia, ¿la adición de hidroclorotiazida 25 mg vía oral cada 24 horas comparada con la adición de amlodipino 5 mg vía oral cada 24 horas reduce los eventos cardiovasculares mayores?',
+        correcta: false,
+        errorTag: 'Detalles en I y C',
+        feedback: 'La I y la C incluyen dosis, vía y frecuencia. Esos son detalles de prescripción que se resuelven al leer los estudios, no al formular la pregunta. En el PICO la I y la C llevan solo el nombre limpio de la alternativa.'
+      },
+      {
+        letra: 'C',
+        texto: 'En adultos con hipertensión arterial no controlada bajo enalapril en monoterapia, ¿la adición de hidroclorotiazida comparada con la adición de amlodipino reduce las cifras de presión arterial sistólica en consultorio?',
+        correcta: false,
+        errorTag: 'Outcome intermedio',
+        feedback: 'La O aquí es una variable intermedia (cifra tensional) que no es lo que le importa al paciente. Los desenlaces del PICO deben ser eventos clínicos que cambian la vida del paciente, como infarto, ictus o muerte cardiovascular.'
+      }
+    ]
+  },
+  {
+    id: 'n1-02',
+    domain: 'Medicina interna · Neumonía adquirida en comunidad',
+    caso: 'En sala general se hospitalizan adultos con neumonía adquirida en la comunidad de gravedad moderada. El equipo tratante duda si iniciar amoxicilina/clavulanato más azitromicina o iniciar ceftriaxona más azitromicina como esquema empírico, buscando disminuir la mortalidad hospitalaria.',
+    opciones: [
+      {
+        letra: 'A',
+        texto: 'En un hombre de 58 años hospitalizado por neumonía adquirida en la comunidad de gravedad moderada, ¿el uso de amoxicilina/clavulanato más azitromicina comparado con ceftriaxona más azitromicina reduce la mortalidad hospitalaria?',
+        correcta: false,
+        errorTag: 'P con dato individual',
+        feedback: 'La P describe a un paciente individual (un hombre de 58 años), no al grupo de interés. Además la edad y el sexo no son datos que cambien la decisión de esquema antibiótico en este caso. En el PICO la P es siempre el grupo, no el paciente frente al médico.'
+      },
+      {
+        letra: 'B',
+        texto: 'En adultos hospitalizados en sala general por neumonía adquirida en la comunidad de gravedad moderada, ¿el uso de amoxicilina/clavulanato más azitromicina comparado con ceftriaxona más azitromicina reduce la mortalidad hospitalaria?',
+        correcta: true,
+        feedback: 'La P captura al grupo con las características que cambian la decisión (gravedad moderada, hospitalizados en sala general). La I y la C son los dos esquemas empíricos alternativos, nombrados limpiamente. La O es un desenlace duro y relevante.'
+      },
+      {
+        letra: 'C',
+        texto: 'En adultos hospitalizados en sala general por neumonía adquirida en la comunidad de gravedad moderada, ¿el uso de amoxicilina/clavulanato más azitromicina reduce la mortalidad hospitalaria?',
+        correcta: false,
+        errorTag: 'Falta la C',
+        feedback: 'Falta el comparador. La pregunta clínica original enfrenta dos esquemas empíricos alternativos, no un esquema frente a nada. Sin C explícita la pregunta no orienta una estrategia de búsqueda que compare las dos opciones.'
+      }
+    ]
+  },
+  {
+    id: 'n1-03',
+    domain: 'Endocrinología · Diabetes mellitus tipo 2',
+    caso: 'En atención primaria se manejan adultos con diabetes mellitus tipo 2 y hemoglobina glicada por encima de la meta a pesar de recibir metformina en dosis máxima tolerada. El equipo debate si añadir un inhibidor de SGLT2 o añadir un análogo de GLP-1 para reducir el riesgo de eventos cardiovasculares mayores.',
+    opciones: [
+      {
+        letra: 'A',
+        texto: 'En adultos con diabetes mellitus tipo 2 y hemoglobina glicada por encima de la meta bajo metformina en dosis máxima tolerada, ¿la adición de un inhibidor de SGLT2 comparada con la adición de un análogo de GLP-1 disminuye la hemoglobina glicada?',
+        correcta: false,
+        errorTag: 'Outcome intermedio',
+        feedback: 'La O es una variable intermedia (HbA1c) que refleja control metabólico pero no captura el desenlace que motiva la pregunta clínica original. El equipo quiere reducir eventos cardiovasculares mayores, y ese debería ser el desenlace del PICO.'
+      },
+      {
+        letra: 'B',
+        texto: 'En pacientes diabéticos, ¿la adición de empagliflozina 10 mg vía oral cada 24 horas comparada con la adición de liraglutida 1.8 mg subcutánea cada 24 horas disminuye los eventos cardiovasculares mayores?',
+        correcta: false,
+        errorTag: 'P vaga · Detalles en I y C',
+        feedback: 'La P es demasiado vaga (pacientes diabéticos, sin especificar el subgrupo con HbA1c por encima de la meta ni el tratamiento previo). Además la I y la C incluyen molécula específica, dosis y vía, en vez del nombre limpio de la clase farmacológica.'
+      },
+      {
+        letra: 'C',
+        texto: 'En adultos con diabetes mellitus tipo 2 y hemoglobina glicada por encima de la meta bajo metformina en dosis máxima tolerada, ¿la adición de un inhibidor de SGLT2 comparada con la adición de un análogo de GLP-1 reduce los eventos cardiovasculares mayores?',
+        correcta: true,
+        feedback: 'La P captura al subgrupo con la característica que cambia la decisión (control subóptimo bajo metformina en dosis máxima tolerada). La I y la C son las dos clases farmacológicas alternativas, nombradas limpiamente. La O es un desenlace clínicamente importante para el paciente.'
+      }
+    ]
+  }
+];
+
+const casesN3 = [
+  {
+    id: 'n3-01',
+    domain: 'Reumatología · Osteoartrosis de rodilla',
+    caso: 'En atención ambulatoria se manejan adultos con osteoartrosis sintomática de rodilla y dolor moderado. El equipo plantea el uso de AINE orales o paracetamol como primera línea farmacológica para el control del dolor y la mejoría funcional. Una compañera formuló el siguiente PICO para este caso.',
+    pico: {
+      P: {
+        original: 'Mujer de 62 años con osteoartrosis de rodilla',
+        isError: true,
+        errorCategory: 'p-individual',
+        correctText: 'Adultos con osteoartrosis sintomática de rodilla y dolor moderado'
+      },
+      I: {
+        original: 'Ibuprofeno 400 mg vía oral cada 8 horas por 12 semanas',
+        isError: true,
+        errorCategory: 'i-detalles',
+        correctText: 'AINE orales'
+      },
+      C: {
+        original: 'Ninguno',
+        isError: true,
+        errorCategory: 'c-ausente',
+        correctText: 'Paracetamol'
+      },
+      O: {
+        original: 'Reducción de al menos 2 puntos en la escala visual analógica del dolor a las 2 semanas',
+        isError: true,
+        errorCategory: 'o-intermedia',
+        correctText: 'Alivio del dolor y mejoría funcional clínicamente relevantes'
+      }
+    },
+    proseQuestion: 'En adultos con osteoartrosis sintomática de rodilla y dolor moderado, ¿los AINE orales comparados con paracetamol producen mayor alivio del dolor y mejoría funcional clínicamente relevantes?'
+  },
+  {
+    id: 'n3-02',
+    domain: 'Cardiología · Fibrilación auricular',
+    caso: 'En consulta externa de cardiología se atienden adultos con fibrilación auricular no valvular y riesgo tromboembólico elevado. Se debe elegir entre un anticoagulante oral directo o warfarina para la prevención de eventos embólicos. Un compañero formuló el siguiente PICO para este caso.',
+    pico: {
+      P: {
+        original: 'Adulto con fibrilación auricular',
+        isError: true,
+        errorCategory: 'p-incompleta',
+        correctText: 'Adultos con fibrilación auricular no valvular y riesgo tromboembólico elevado'
+      },
+      I: {
+        original: 'Apixabán 5 mg vía oral cada 12 horas de por vida',
+        isError: true,
+        errorCategory: 'i-detalles',
+        correctText: 'Anticoagulantes orales directos'
+      },
+      C: {
+        original: 'Sin anticoagulación',
+        isError: true,
+        errorCategory: 'c-irreal',
+        correctText: 'Warfarina'
+      },
+      O: {
+        original: 'INR entre 2 y 3',
+        isError: true,
+        errorCategory: 'o-intermedia',
+        correctText: 'Eventos embólicos y sangrado mayor'
+      }
+    },
+    proseQuestion: 'En adultos con fibrilación auricular no valvular y riesgo tromboembólico elevado, ¿los anticoagulantes orales directos comparados con warfarina reducen los eventos embólicos con menor riesgo de sangrado mayor?'
+  }
+];
+
+const errorCategories = {
+  'p-individual': {
+    label: 'Incluye datos de un paciente individual',
+    explanation: 'La P describe al grupo, no al paciente que está frente al médico. Datos como edad y sexo específicos van solo si cambian la decisión clínica.'
+  },
+  'p-incompleta': {
+    label: 'Falta el determinante clínico',
+    explanation: 'La P no incluye la característica que hace que esta pregunta se aplique a un subgrupo específico y no a cualquier paciente.'
+  },
+  'p-vaga': {
+    label: 'Descripción demasiado general',
+    explanation: 'La P no acota al grupo con la característica que cambia la decisión.'
+  },
+  'i-detalles': {
+    label: 'Incluye dosis, vía, frecuencia o duración',
+    explanation: 'La I lleva solo el nombre limpio de la intervención (a nivel de molécula o clase). Los detalles de prescripción se resuelven en la lectura crítica de los estudios.'
+  },
+  'c-ausente': {
+    label: 'C ausente o "Ninguno" cuando existe alternativa clínica realista',
+    explanation: 'Cuando la decisión enfrenta dos alternativas de tratamiento, la C debe ser la otra alternativa, no "ninguno".'
+  },
+  'c-irreal': {
+    label: 'C que no corresponde a una alternativa clínica realista',
+    explanation: 'La C debe ser lo que se haría en ausencia de la intervención propuesta según la práctica clínica habitual, no una comparación teórica sin sentido clínico.'
+  },
+  'o-intermedia': {
+    label: 'Variable intermedia en vez de desenlace clínico',
+    explanation: 'La O debe ser un evento importante para el paciente, no una medida bioquímica, fisiológica o de proceso que no cambia su vida directamente.'
+  },
+  'o-horizonte': {
+    label: 'Horizonte temporal inadecuado',
+    explanation: 'El horizonte de tiempo no corresponde con la naturaleza del problema clínico ni con lo que le importa al paciente.'
+  }
+};
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+
+let state = {
+  screen: 'home',
+  n1Index: 0,
+  n1Answers: {},
+  n3Index: 0,
+  n3Progress: {},
+  editingComponent: null,
+  editingCorrection: null
+};
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+
+function render() {
+  const app = document.getElementById('app');
+  updateProgressStrip();
+
+  if (state.screen === 'home') {
+    app.innerHTML = renderHome();
+    attachHomeHandlers();
+  } else if (state.screen === 'n1') {
+    app.innerHTML = renderN1();
+    attachN1Handlers();
+  } else if (state.screen === 'n1-done') {
+    app.innerHTML = renderN1Done();
+    attachDoneHandlers();
+  } else if (state.screen === 'n3') {
+    app.innerHTML = renderN3();
+    attachN3Handlers();
+  } else if (state.screen === 'n3-done') {
+    app.innerHTML = renderN3Done();
+    attachDoneHandlers();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgressStrip() {
+  const strip = document.getElementById('progressStrip');
+  if (state.screen === 'home') {
+    strip.innerHTML = '';
+    return;
+  }
+  if (state.screen === 'n1' || state.screen === 'n1-done') {
+    const total = casesN1.length;
+    const current = state.screen === 'n1-done' ? total : state.n1Index + 1;
+    strip.innerHTML = `
+      <span>Grupo A · Intervención</span>
+      <span class="mono">Nivel 1 · ${current}/${total}</span>
+    `;
+    return;
+  }
+  if (state.screen === 'n3' || state.screen === 'n3-done') {
+    const total = casesN3.length;
+    const current = state.screen === 'n3-done' ? total : state.n3Index + 1;
+    strip.innerHTML = `
+      <span>Grupo A · Intervención</span>
+      <span class="mono">Nivel 3 · ${current}/${total}</span>
+    `;
+  }
+}
+
+/* ---------- HOME ---------- */
+
+function renderHome() {
+  return `
+    <div class="notes-panel" id="notesPanel">
+      <div class="notes-header" onclick="toggleNotes()">
+        <div class="notes-header-left">
+          <span class="notes-tag">Para el equipo docente</span>
+          <span>Cómo leer este prototipo antes de decidir</span>
+        </div>
+        <div class="notes-toggle" id="notesToggle">Ocultar ↑</div>
+      </div>
+      <div class="notes-body" id="notesBody">
+        <p>Este prototipo demuestra únicamente los <strong>Niveles 1 y 3 del módulo PICO</strong>, y solo del <strong>Grupo A (intervención)</strong>. Es el fragmento del sistema que puede funcionar completamente sin IAGen en tiempo real. La versión final tendría más casos por nivel, incluiría el Grupo B (etiología, pronóstico y validez diagnóstica) y añadiría el módulo de búsqueda.</p>
+        <p>Lo que sí muestra este prototipo:</p>
+        <ul>
+          <li><strong>Nivel 1</strong> como opción múltiple con retroalimentación específica por opción, generada previamente y validada por el equipo docente.</li>
+          <li><strong>Nivel 3</strong> como identificación estructurada de errores por componente, con menús de clasificación y de corrección basados en el catálogo de errores típicos del curso.</li>
+          <li>Indicador de progreso y avance controlado por el estudiante.</li>
+        </ul>
+        <p>Lo que este prototipo <strong>no</strong> muestra y necesita decisión del equipo docente:</p>
+        <ul>
+          <li>El <strong>Nivel 2 (construcción libre)</strong>. Es el único punto donde retirar IAGen implica cambiar la naturaleza pedagógica del ejercicio (dejaría de ser producción libre y pasaría a ser selección estructurada de componentes del caso).</li>
+          <li>El <strong>módulo de búsqueda</strong>. Tiene una decisión pedagógica de fondo separada: si el asistente verifica MeSH/DeCS por el estudiante, o si la app guía al estudiante a verificar autónomamente en MeSH Browser y DeCS.</li>
+        </ul>
+        <p>La pregunta concreta para el equipo docente al terminar este recorrido: ¿el rigor y el ritmo pedagógico que se logra en Niveles 1 y 3 sin IAGen es suficiente para justificar mantener IAGen solo en el Nivel 2, o vale la pena replantear el Nivel 2 para eliminar por completo la dependencia de IA en tiempo real?</p>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-eyebrow">Prototipo interactivo</div>
+      <h1 class="hero-title">Práctica estructurada de <em>preguntas clínicas PICO</em> sin dependencia de IAGen en tiempo real.</h1>
+      <p class="hero-lede">Los ejercicios que aquí se demuestran usan un banco de casos pre-generados y curados por el equipo docente, con retroalimentación específica prescrita por opción y por tipo de error. El sistema decide qué mostrar; el estudiante interactúa; la IAGen no participa en producción.</p>
+    </section>
+
+    <div class="demo-cards">
+      <div class="demo-card" onclick="startN1()">
+        <div>
+          <div class="demo-card-tag">Nivel 1 · Selección</div>
+          <div class="demo-card-title">Elegir el PICO correcto entre opciones</div>
+          <div class="demo-card-desc">El estudiante ve un caso clínico breve y tres formulaciones PICO alternativas. Debe identificar la correcta y entender por qué las demás fallan. Retroalimentación específica por opción, anclada al catálogo de errores típicos del curso.</div>
+        </div>
+        <div class="demo-card-meta">
+          <span>3 casos · dominios clínicos distintos</span>
+          <span class="demo-card-cta">Iniciar →</span>
+        </div>
+      </div>
+
+      <div class="demo-card" onclick="startN3()">
+        <div>
+          <div class="demo-card-tag">Nivel 3 · Corrección de errores</div>
+          <div class="demo-card-title">Identificar y corregir errores en un PICO</div>
+          <div class="demo-card-desc">El estudiante ve un caso y un PICO ya formulado por un compañero, con errores plausibles distribuidos entre los cuatro componentes. Debe marcar cuáles están mal, clasificar el tipo de error y elegir la corrección adecuada.</div>
+        </div>
+        <div class="demo-card-meta">
+          <span>2 casos · errores del catálogo</span>
+          <span class="demo-card-cta">Iniciar →</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleNotes() {
+  const body = document.getElementById('notesBody');
+  const toggle = document.getElementById('notesToggle');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    toggle.textContent = 'Ocultar ↑';
+  } else {
+    body.style.display = 'none';
+    toggle.textContent = 'Mostrar ↓';
+  }
+}
+
+function attachHomeHandlers() {}
+
+function startN1() {
+  state.screen = 'n1';
+  state.n1Index = 0;
+  state.n1Answers = {};
+  render();
+}
+
+function startN3() {
+  state.screen = 'n3';
+  state.n3Index = 0;
+  state.n3Progress = initN3Progress(casesN3[0]);
+  render();
+}
+
+function initN3Progress(caseObj) {
+  const progress = {};
+  ['P','I','C','O'].forEach(k => {
+    progress[k] = { marked: null, errorCategory: null, correction: null, confirmed: false };
+  });
+  return progress;
+}
+
+function goHome() {
+  state.screen = 'home';
+  render();
+}
+
+/* ---------- LEVEL 1 ---------- */
+
+function renderN1() {
+  const c = casesN1[state.n1Index];
+  const answer = state.n1Answers[c.id];
+  const showFeedback = !!answer;
+
+  const optionsHtml = c.opciones.map(opt => {
+    let cls = 'option';
+    let feedbackLabel = '';
+    if (showFeedback) {
+      cls += ' locked';
+      if (opt.letra === answer && opt.correcta) {
+        cls += ' selected-correct';
+        feedbackLabel = 'Correcta';
+      } else if (opt.letra === answer && !opt.correcta) {
+        cls += ' selected-incorrect';
+        feedbackLabel = 'Por qué falla';
+      } else if (opt.correcta) {
+        cls += ' selected-correct';
+        feedbackLabel = 'Esta era la correcta';
+      } else {
+        cls += ' dimmed';
+        feedbackLabel = 'Por qué falla';
+      }
+    }
+    const errorTagHtml = opt.errorTag ? `<span class="error-tag">${opt.errorTag}</span>` : '';
+    return `
+      <div class="${cls}" data-letra="${opt.letra}">
+        <div class="option-marker">${opt.letra}</div>
+        <div class="option-content">
+          <div class="option-text">${opt.texto}</div>
+          <div class="feedback">
+            <div class="feedback-label">${feedbackLabel}</div>
+            <div class="feedback-text">${errorTagHtml}${opt.feedback}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const isLast = state.n1Index === casesN1.length - 1;
+  const nextLabel = isLast ? 'Cerrar Nivel 1 →' : 'Siguiente caso →';
+
+  return `
+    <div class="case-header">
+      <div class="case-header-left">
+        <div class="case-header-eyebrow">Grupo A · Intervención · Caso ${state.n1Index + 1} de ${casesN1.length}</div>
+        <h2 class="display">Nivel 1 · Selección</h2>
+        <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${c.domain}</div>
+      </div>
+      <div class="progress-inline">
+        <span class="mono">Grupo A · Nivel 1 · ${state.n1Index + 1}/${casesN1.length}</span>
+      </div>
+    </div>
+
+    <div class="case-box">
+      <div class="case-box-label">Escenario clínico</div>
+      <div class="case-box-text">${c.caso}</div>
+    </div>
+
+    <div class="prompt-line">¿Cuál de estas opciones formula correctamente el PICO de este caso?</div>
+
+    <div class="options-list" id="optionsList">
+      ${optionsHtml}
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+      <div style="display: flex; gap: 12px;">
+        ${state.n1Index > 0 ? `<button class="btn btn-secondary" onclick="prevN1()">← Anterior</button>` : ''}
+        <button class="btn btn-primary" id="nextBtn" onclick="nextN1()" ${!showFeedback ? 'disabled' : ''}>${nextLabel}</button>
+      </div>
+    </div>
+  `;
+}
+
+function attachN1Handlers() {
+  const c = casesN1[state.n1Index];
+  if (state.n1Answers[c.id]) return;
+
+  document.querySelectorAll('#optionsList .option').forEach(el => {
+    el.addEventListener('click', () => {
+      const letra = el.dataset.letra;
+      state.n1Answers[c.id] = letra;
+      render();
+    });
+  });
+}
+
+function nextN1() {
+  if (state.n1Index === casesN1.length - 1) {
+    state.screen = 'n1-done';
+  } else {
+    state.n1Index++;
+  }
+  render();
+}
+
+function prevN1() {
+  if (state.n1Index > 0) {
+    state.n1Index--;
+    render();
+  }
+}
+
+function renderN1Done() {
+  const correct = casesN1.filter(c => {
+    const ans = state.n1Answers[c.id];
+    const opt = c.opciones.find(o => o.letra === ans);
+    return opt && opt.correcta;
+  }).length;
+
+  return `
+    <div class="case-header">
+      <div class="case-header-left">
+        <div class="case-header-eyebrow">Grupo A · Intervención</div>
+        <h2 class="display">Nivel 1 completado</h2>
+      </div>
+      <div class="progress-inline">
+        <span class="mono">Grupo A · Nivel 1 ✓</span>
+      </div>
+    </div>
+
+    <div class="result-summary">
+      <div class="result-title">Resumen del nivel</div>
+      <div class="result-score">Aciertos en primer intento: <strong>${correct} de ${casesN1.length}</strong>.</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+      <button class="btn btn-primary" onclick="startN3()">Continuar al Nivel 3 →</button>
+    </div>
+  `;
+}
+
+function attachDoneHandlers() {}
+
+/* ---------- LEVEL 3 ---------- */
+
+function renderN3() {
+  const c = casesN3[state.n3Index];
+  const progress = state.n3Progress;
+
+  const allConfirmed = ['P','I','C','O'].every(k => progress[k].confirmed);
+
+  const rowsHtml = ['P','I','C','O'].map(k => {
+    const comp = c.pico[k];
+    const p = progress[k];
+    let valueCls = 'pico-value';
+    let statusText = '';
+    let hintText = '';
+
+    if (p.confirmed) {
+      valueCls += p.marked === 'error' ? ' marked-error' : ' marked-ok';
+      valueCls += ' confirmed';
+      statusText = p.marked === 'error' ? 'Marcado como error' : 'Marcado como correcto';
+      if (p.marked === 'error' && p.correction) {
+        hintText = `Corrección elegida: <em>${p.correction}</em>`;
+      }
+    } else if (state.editingComponent === k) {
+      valueCls += p.marked === 'error' ? ' marked-error' : '';
+      statusText = 'Editando…';
+    }
+
+    return `
+      <div class="pico-row">
+        <div class="pico-label" data-c="${k}">${k}</div>
+        <div class="${valueCls}" data-component="${k}">
+          ${comp.original}
+          ${statusText ? `<div class="pico-value-status">${statusText}</div>` : ''}
+          ${hintText ? `<div class="pico-value-hint">${hintText}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const editorHtml = state.editingComponent ? renderCorrectionEditor(c, state.editingComponent) : '';
+
+  return `
+    <div class="case-header">
+      <div class="case-header-left">
+        <div class="case-header-eyebrow">Grupo A · Intervención · Caso ${state.n3Index + 1} de ${casesN3.length}</div>
+        <h2 class="display">Nivel 3 · Corrección de errores</h2>
+        <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${c.domain}</div>
+      </div>
+      <div class="progress-inline">
+        <span class="mono">Grupo A · Nivel 3 · ${state.n3Index + 1}/${casesN3.length}</span>
+      </div>
+    </div>
+
+    <div class="case-box">
+      <div class="case-box-label">Escenario clínico</div>
+      <div class="case-box-text">${c.caso}</div>
+    </div>
+
+    <div class="pico-instruction">
+      Una compañera formuló el siguiente PICO. Tu tarea es identificar qué componentes tienen errores y proponer la corrección. <strong>Haz clic en cada componente</strong> para marcarlo como error o confirmarlo como correcto.
+    </div>
+
+    <div class="pico-table">
+      ${rowsHtml}
+    </div>
+
+    ${editorHtml}
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-primary" id="finishBtn" onclick="finishN3()" ${!allConfirmed ? 'disabled' : ''}>
+          ${allConfirmed ? 'Ver PICO corregido →' : 'Marca los cuatro componentes'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderCorrectionEditor(caseObj, componentKey) {
+  const comp = caseObj.pico[componentKey];
+  const p = state.n3Progress[componentKey];
+
+  // Step 1: mark error or ok
+  if (!p.marked) {
+    return `
+      <div class="correction-editor open">
+        <h4>Componente <span>${componentKey}</span> · ¿Cómo evalúas este componente?</h4>
+        <div class="correction-choice" onclick="markComponent('error')">
+          <input type="radio" name="mark" ${p.marked === 'error' ? 'checked' : ''}>
+          Tiene un error y debe corregirse
+        </div>
+        <div class="correction-choice" onclick="markComponent('ok')">
+          <input type="radio" name="mark" ${p.marked === 'ok' ? 'checked' : ''}>
+          Es correcto tal como está
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-secondary" onclick="cancelEdit()">Cancelar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Step 2: if ok, confirm directly
+  if (p.marked === 'ok') {
+    return `
+      <div class="correction-editor open">
+        <h4>Componente <span>${componentKey}</span> · Confirmar</h4>
+        <p style="font-size: 14px; margin-bottom: 16px;">Vas a marcar este componente como correcto tal como está. ¿Confirmas?</p>
+        <div class="editor-actions">
+          <button class="btn btn-secondary" onclick="resetMark()">Cambiar evaluación</button>
+          <button class="btn btn-primary" onclick="confirmComponent()">Confirmar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Step 3: if error, ask for classification
+  if (p.marked === 'error' && !p.errorCategory) {
+    const cats = Object.entries(errorCategories).filter(([key, val]) => {
+      // Filter to categories relevant to this component
+      return key.startsWith(componentKey.toLowerCase() + '-');
+    });
+    const optsHtml = cats.map(([key, val]) => `
+      <div class="correction-choice" onclick="setErrorCategory('${key}')">
+        <input type="radio" name="errcat">
+        <strong>${val.label}.</strong> <span style="color: var(--muted);">${val.explanation}</span>
+      </div>
+    `).join('');
+    return `
+      <div class="correction-editor open">
+        <h4>Componente <span>${componentKey}</span> · ¿Qué tipo de error es?</h4>
+        ${optsHtml}
+        <div class="editor-actions">
+          <button class="btn btn-secondary" onclick="resetMark()">Cambiar evaluación</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Step 4: if error and categorized, ask for correction
+  if (p.marked === 'error' && p.errorCategory && !p.correction) {
+    const correct = comp.correctText;
+    // Build a set of distractors + the correct answer
+    const distractors = generateDistractors(componentKey, caseObj);
+    const allChoices = shuffleWithCorrect(correct, distractors);
+    const optsHtml = allChoices.map(choice => `
+      <div class="correction-choice" onclick="setCorrection(this.dataset.text)" data-text="${choice.replace(/"/g, '&quot;')}">
+        <input type="radio" name="corr">
+        ${choice}
+      </div>
+    `).join('');
+    return `
+      <div class="correction-editor open">
+        <h4>Componente <span>${componentKey}</span> · Elige la corrección</h4>
+        ${optsHtml}
+        <div class="editor-actions">
+          <button class="btn btn-secondary" onclick="resetErrorCat()">Cambiar tipo de error</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Step 5: correction chosen, confirm
+  return `
+    <div class="correction-editor open">
+      <h4>Componente <span>${componentKey}</span> · Confirmar corrección</h4>
+      <p style="font-size: 14px; margin-bottom: 8px;">Marcaste este componente como error del tipo:</p>
+      <p style="font-size: 14px; margin-bottom: 12px;"><strong>${errorCategories[p.errorCategory].label}.</strong></p>
+      <p style="font-size: 14px; margin-bottom: 8px;">Y elegiste corregirlo así:</p>
+      <p style="font-size: 14px; margin-bottom: 16px; padding: 12px; background: var(--surface-alt); border-radius: 4px;"><em>${p.correction}</em></p>
+      <div class="editor-actions">
+        <button class="btn btn-secondary" onclick="resetCorrection()">Cambiar corrección</button>
+        <button class="btn btn-primary" onclick="confirmComponent()">Confirmar componente</button>
+      </div>
+    </div>
+  `;
+}
+
+function generateDistractors(componentKey, caseObj) {
+  // For simplicity in the prototype: use the original (wrong) text as a distractor
+  // plus a plausible half-correction. In a real system these come from the case bank.
+  const original = caseObj.pico[componentKey].original;
+  const distractors = [];
+
+  if (componentKey === 'P') {
+    distractors.push(original); // the wrong one
+    distractors.push('Pacientes de cualquier edad con síntomas variables');
+  } else if (componentKey === 'I') {
+    distractors.push(original);
+    if (caseObj.id === 'n3-01') distractors.push('Ibuprofeno en dosis anti-inflamatoria');
+    else distractors.push('Anticoagulación en general');
+  } else if (componentKey === 'C') {
+    distractors.push(original);
+    if (caseObj.id === 'n3-01') distractors.push('Placebo');
+    else distractors.push('Antiagregación con aspirina');
+  } else if (componentKey === 'O') {
+    distractors.push(original);
+    if (caseObj.id === 'n3-01') distractors.push('Consumo de acetaminofén de rescate');
+    else distractors.push('Tiempo hasta cardioversión');
+  }
+
+  return distractors;
+}
+
+function shuffleWithCorrect(correct, distractors) {
+  const all = [correct, ...distractors];
+  // Deterministic shuffle so the same case always shows options in the same order
+  return all.sort((a, b) => a.length - b.length);
+}
+
+function attachN3Handlers() {
+  document.querySelectorAll('.pico-value:not(.confirmed)').forEach(el => {
+    el.addEventListener('click', () => {
+      const k = el.dataset.component;
+      if (state.editingComponent === k) return;
+      state.editingComponent = k;
+      render();
+    });
+  });
+}
+
+function markComponent(mark) {
+  const k = state.editingComponent;
+  state.n3Progress[k].marked = mark;
+  render();
+}
+
+function resetMark() {
+  const k = state.editingComponent;
+  state.n3Progress[k].marked = null;
+  state.n3Progress[k].errorCategory = null;
+  state.n3Progress[k].correction = null;
+  render();
+}
+
+function setErrorCategory(cat) {
+  const k = state.editingComponent;
+  state.n3Progress[k].errorCategory = cat;
+  render();
+}
+
+function resetErrorCat() {
+  const k = state.editingComponent;
+  state.n3Progress[k].errorCategory = null;
+  state.n3Progress[k].correction = null;
+  render();
+}
+
+function setCorrection(text) {
+  const k = state.editingComponent;
+  state.n3Progress[k].correction = text;
+  render();
+}
+
+function resetCorrection() {
+  const k = state.editingComponent;
+  state.n3Progress[k].correction = null;
+  render();
+}
+
+function confirmComponent() {
+  const k = state.editingComponent;
+  state.n3Progress[k].confirmed = true;
+  state.editingComponent = null;
+  render();
+}
+
+function cancelEdit() {
+  state.editingComponent = null;
+  render();
+}
+
+function finishN3() {
+  state.screen = 'n3-done';
+  render();
+}
+
+function evaluateComponent(comp, p) {
+  const markedError = p.marked === 'error';
+  const catCorrect = p.errorCategory === comp.errorCategory;
+  const corrCorrect = p.correction === comp.correctText;
+
+  if (comp.isError) {
+    if (!markedError) {
+      return {
+        tone: 'incorrect',
+        text: `No lo marcaste como error, pero sí lo tiene: <strong>${errorCategories[comp.errorCategory].label.toLowerCase()}</strong>. La formulación adecuada es: <em>${comp.correctText}</em>.`
+      };
+    }
+    if (markedError && catCorrect && corrCorrect) {
+      return {
+        tone: 'correct',
+        text: `Reconociste el error (${errorCategories[comp.errorCategory].label.toLowerCase()}) y elegiste la corrección adecuada.`
+      };
+    }
+    if (markedError && !catCorrect) {
+      return {
+        tone: 'partial',
+        text: `Identificaste que había un error. La categoría correcta es <strong>${errorCategories[comp.errorCategory].label.toLowerCase()}</strong>. La formulación adecuada es: <em>${comp.correctText}</em>.`
+      };
+    }
+    if (markedError && catCorrect && !corrCorrect) {
+      return {
+        tone: 'partial',
+        text: `Identificaste el error y su categoría, pero la corrección elegida no es la adecuada. La formulación correcta es: <em>${comp.correctText}</em>.`
+      };
+    }
+  }
+  if (!comp.isError && !markedError) {
+    return { tone: 'correct', text: 'Confirmaste correctamente que este componente estaba bien formulado.' };
+  }
+  if (!comp.isError && markedError) {
+    return { tone: 'incorrect', text: 'Lo marcaste como error, pero la formulación original era adecuada.' };
+  }
+  return { tone: 'partial', text: '' };
+}
+
+function componentRules(c) {
+  const rules = {
+    P: 'La P describe al grupo, no al paciente individual. Solo entran características que cambian la decisión clínica.',
+    I: 'La I lleva el nombre limpio de la intervención (a nivel de molécula o clase). Sin dosis, vía, frecuencia ni duración.',
+    C: 'La C es la alternativa clínica realista: lo que se haría si no se aplicara la I. Nunca "ninguno" cuando existe una alternativa.',
+    O: 'La O es un desenlace clínicamente importante para el paciente. Nunca una variable intermedia ni una medida de proceso.'
+  };
+  return ['P','I','C','O']
+    .filter(k => c.pico[k].isError)
+    .map(k => ({ key: k, text: rules[k] }));
+}
+
+function renderN3Done() {
+  const c = casesN3[state.n3Index];
+  const progress = state.n3Progress;
+
+  let correctCount = 0;
+  let correctionCount = 0;
+  const totalErrors = ['P','I','C','O'].filter(k => c.pico[k].isError).length;
+
+  ['P','I','C','O'].forEach(k => {
+    const comp = c.pico[k];
+    const p = progress[k];
+    if (comp.isError && p.marked === 'error') correctCount++;
+    if (!comp.isError && p.marked === 'ok') correctCount++;
+    if (comp.isError && p.marked === 'error' && p.correction === comp.correctText) correctionCount++;
+  });
+
+  const feedbackHtml = ['P','I','C','O'].map(k => {
+    const ev = evaluateComponent(c.pico[k], progress[k]);
+    return `
+      <div class="fb-row fb-${ev.tone}">
+        <div class="fb-key" data-c="${k}">${k}</div>
+        <div class="fb-text">${ev.text}</div>
+      </div>
+    `;
+  }).join('');
+
+  const rulesList = componentRules(c);
+  const rulesHtml = rulesList.length ? `
+    <div class="rules-box">
+      <div class="rules-label">Reglas del método a recordar</div>
+      ${rulesList.map(r => `
+        <div class="rule-row">
+          <span class="rule-key" data-c="${r.key}">${r.key}</span>
+          <span class="rule-text">${r.text}</span>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  const isLast = state.n3Index === casesN3.length - 1;
+
+  return `
+    <div class="case-header">
+      <div class="case-header-left">
+        <div class="case-header-eyebrow">Grupo A · Intervención · Caso ${state.n3Index + 1} de ${casesN3.length}</div>
+        <h2 class="display">Nivel 3 · Cierre del caso</h2>
+      </div>
+      <div class="progress-inline">
+        <span class="mono">Grupo A · Nivel 3 · ${state.n3Index + 1}/${casesN3.length}</span>
+      </div>
+    </div>
+
+    <div class="result-summary">
+      <div class="result-title">Retroalimentación por componente</div>
+      <div class="result-score">Componentes evaluados correctamente: <strong>${correctCount} de 4</strong> · Correcciones acertadas: <strong>${correctionCount} de ${totalErrors}</strong>.</div>
+
+      <div class="fb-list">
+        ${feedbackHtml}
+      </div>
+
+      ${rulesHtml}
+
+      <div class="final-pico">
+        <div class="final-pico-label">PICO corregido</div>
+        <div class="final-pico-row">
+          <div class="final-pico-key">P</div>
+          <div>${c.pico.P.correctText}</div>
+        </div>
+        <div class="final-pico-row">
+          <div class="final-pico-key">I</div>
+          <div>${c.pico.I.correctText}</div>
+        </div>
+        <div class="final-pico-row">
+          <div class="final-pico-key">C</div>
+          <div>${c.pico.C.correctText}</div>
+        </div>
+        <div class="final-pico-row">
+          <div class="final-pico-key">O</div>
+          <div>${c.pico.O.correctText}</div>
+        </div>
+        <div class="prose-question"><em>Pregunta clínica en prosa:</em> ${c.proseQuestion}</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+      ${isLast
+        ? `<button class="btn btn-primary" onclick="goHome()">Cerrar recorrido →</button>`
+        : `<button class="btn btn-primary" onclick="nextN3()">Siguiente caso →</button>`
+      }
+    </div>
+  `;
+}
+
+function nextN3() {
+  state.n3Index++;
+  state.n3Progress = initN3Progress(casesN3[state.n3Index]);
+  state.editingComponent = null;
+  state.screen = 'n3';
+  render();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+
+render();
+</script>
+
+</body>
+</html>
